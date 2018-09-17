@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>D-board</title>
+    <style>
+        body {
+            font-family: DejaVuSans, sans-serif;
+        }
+        th {
+            font-weight: normal;
+            text-align: center;
+        }
+    </style>
+    <script type="text/javascript">
+        var initialRows = 3;
+        var numRows = 0;
+        var data;
+
+        var request = new XMLHttpRequest();
+        request.open('GET', 'index.json', true);
+
+        request.onload = function() {
+          if (request.status >= 200 && request.status < 400) {
+            data = JSON.parse(request.responseText);
+            for (var i = 0; i < initialRows; i++) {
+                addRow();
+            }
+          } else {
+            console.log(request);
+          }
+        };
+
+        request.onerror = function() {
+            console.log(request);
+        };
+
+        request.send();
+
+        function addRow() {
+            if (numRows >= data.length) {
+                document.getElementById("older").style.display = "none";
+                return;
+            }
+            var board = document.getElementById("board");
+            var tr = document.createElement("tr");
+            var d = data[data.length - 1 - numRows];
+            var html = `<td>${d.week_start}<br><br>TIR: ${d.tir}<br>Avg: ${d.average_bg}<br>Est A1c: ${d.est_hba1c}</td>`
+            for (var j = 0; j < d.plots.length; j++) {
+                html += `<td><img src="${d.plots[j]}" title="${d.plots[j]}"/></td>`
+            }
+            tr.innerHTML = html
+            board.appendChild(tr);
+            numRows++;
+        }
+    </script>
+</head>
+<body>
+    <table id="board">
+        <tr>
+            <th></th>
+            <th>Monday</th>
+            <th>Tuesday</th>
+            <th>Wednesday</th>
+            <th>Thursday</th>
+            <th>Friday</th>
+            <th>Saturday</th>
+            <th>Sunday</th>
+        </tr>
+
+        <!--<tr>-->
+        <!--<td>13/08/2018<br><br>TIR: 78.8%<br>Avg: 5.9<br>Est A1c: 35.1</td>-->
+        <!--<td><img src="2018/08/13/plot.png"/></td>-->
+        <!--<td><img src="2018/08/14/plot.png"/></td>-->
+        <!--<td><img src="2018/08/15/plot.png"/></td>-->
+        <!--<td><img src="2018/08/16/plot.png"/></td>-->
+        <!--<td><img src="2018/08/17/plot.png"/></td>-->
+        <!--<td><img src="2018/08/18/plot.png"/></td>-->
+        <!--<td><img src="2018/08/19/plot.png"/></td>-->
+        <!--</tr>-->
+
+    </table>
+    <p><a id="older" href="#older" onclick="addRow();">Older</a></p>
+</body>
+</html>
+
