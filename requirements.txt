@@ -1,4 +1,5 @@
 black
+gcsfs
 matplotlib
 pandas
 python-dateutil
