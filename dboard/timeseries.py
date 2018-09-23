@@ -74,7 +74,8 @@ def get_weekly_series(days, days_to_points, fn):
 
 
 def get_days_in_week(days):
-    return pd.Series(days, index=pd.DatetimeIndex(days))\
-        .resample("7D")\
+    return (
+        pd.Series(days, index=pd.DatetimeIndex(days))
+        .resample("7D")
         .aggregate(lambda x: tuple(x))
-
+    )

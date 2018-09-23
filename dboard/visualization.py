@@ -1,11 +1,9 @@
-import base64
 import json
 import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
 
 from functools import partial
-from io import BytesIO
 from matplotlib.collections import LineCollection
 from matplotlib.colors import ListedColormap, BoundaryNorm
 from dboard.files import *
@@ -95,22 +93,18 @@ def daily_plot(points, bg_range, day, out_dir):
     for i in range(1, 5):
         ax.axvline(i * 6 * 60, color="k", ls=":", alpha=0.5, linewidth=0.8)
 
-    # Render plot as HTML (from https://stackoverflow.com/questions/31492525/converting-matplotlib-png-to-base64-for-viewing-in-html-template)
-    #figfile = BytesIO()
-    day_str = str(day).split(' ')[0] # TODO: use proper date formatting
-    day_dir = day_str.replace('-', '/')
-    filename = '{}/{}/plot.png'.format(out_dir, day_dir)
+    day_str = str(day).split(" ")[0]  # TODO: use proper date formatting
+    day_dir = day_str.replace("-", "/")
+    filename = "{}/{}/plot.png".format(out_dir, day_dir)
     with open_file(filename, "wb") as figfile:
         # pad_inches will remove padding around the image
         plt.savefig(figfile, format="png", bbox_inches="tight", pad_inches=0)
         plt.close()
-    # figfile.seek(0)  # rewind to beginning of file
-    # figdata_png = base64.b64encode(figfile.getvalue()).decode("utf8")
-    # return '<img src="data:image/png;base64,{}"/>'.format(figdata_png)
     return '<img src="{}/plot.png"/>'.format(day_dir)
 
+
 def create_json_index(csv_file, out_dir, bg_range):
-    index_json = open_file('{}/index.json'.format(out_dir), "w")
+    index_json = open_file("{}/index.json".format(out_dir), "w")
 
     entries_df = read_entries_df(csv_file)
     entries_ts = get_traces_ts(entries_df)
@@ -130,15 +124,17 @@ def create_json_index(csv_file, out_dir, bg_range):
 
     all_data = []
     for day, values in weekly_days.iteritems():
-        all_data.append({
-            'week_start': day.strftime("%d/%m/%Y"),
-            'plots': [day.strftime("%Y/%m/%d/plot.png") for day in values],
-            'range_low': bg_range[0],
-            'range_high': bg_range[1],
-            'tir': "%.1f%%" % weekly_tir[day],
-            'average_bg': "%.1f" % weekly_avg[day],
-            'est_hba1c': "%.1f" % weekly_est_hba1c[day]
-        })
+        all_data.append(
+            {
+                "week_start": day.strftime("%d/%m/%Y"),
+                "plots": [day.strftime("%Y/%m/%d/plot.png") for day in values],
+                "range_low": bg_range[0],
+                "range_high": bg_range[1],
+                "tir": "%.1f%%" % weekly_tir[day],
+                "average_bg": "%.1f" % weekly_avg[day],
+                "est_hba1c": "%.1f" % weekly_est_hba1c[day],
+            }
+        )
 
     print(json.dumps(all_data, indent=4), file=index_json)
 
