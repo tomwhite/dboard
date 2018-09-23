@@ -3,12 +3,12 @@ import json
 import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
-import os
 
 from functools import partial
 from io import BytesIO
 from matplotlib.collections import LineCollection
 from matplotlib.colors import ListedColormap, BoundaryNorm
+from dboard.files import *
 from dboard.stats import *
 from dboard.timeseries import *
 
@@ -100,8 +100,7 @@ def daily_plot(points, bg_range, day, out_dir):
     day_str = str(day).split(' ')[0] # TODO: use proper date formatting
     day_dir = day_str.replace('-', '/')
     filename = '{}/{}/plot.png'.format(out_dir, day_dir)
-    os.makedirs('{}/{}'.format(out_dir, day_dir), exist_ok=True)
-    with open(filename, "wb") as figfile:
+    with open_file(filename, "wb") as figfile:
         # pad_inches will remove padding around the image
         plt.savefig(figfile, format="png", bbox_inches="tight", pad_inches=0)
         plt.close()
@@ -111,8 +110,7 @@ def daily_plot(points, bg_range, day, out_dir):
     return '<img src="{}/plot.png"/>'.format(day_dir)
 
 def create_json_index(csv_file, out_dir, bg_range):
-    os.makedirs(out_dir)
-    index_json = open('{}/index.json'.format(out_dir), "w")
+    index_json = open_file('{}/index.json'.format(out_dir), "w")
 
     entries_df = read_entries_df(csv_file)
     entries_ts = get_traces_ts(entries_df)
