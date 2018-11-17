@@ -108,7 +108,7 @@ def create_json_index(csv_file, out_dir, bg_range):
 
     entries_df = read_entries_df(csv_file)
     entries_ts = get_traces_ts(entries_df)
-    days = get_day_range(entries_ts, weeks_back=10)
+    days = get_day_range(entries_ts, weeks_back=2)
 
     days_to_points = {
         day: list(get_interpolated_points(entries_ts, day)) for day in days
