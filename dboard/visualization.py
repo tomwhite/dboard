@@ -149,3 +149,42 @@ def create_json_index(csv_file, out_dir, bg_range):
 
     for day in days:
         daily_plot(days_to_points[day], bg_range, day, out_dir)
+
+def create_reports(csv_file, out_dir):
+    # read treatments from CSV
+    treatments_df = pd.read_csv(csv_file, parse_dates=['created_at'])
+    treatments_df['created_at'] = treatments_df['created_at'].dt.round('min') # round to nearest minute
+    treatments_df = treatments_df.rename(columns={'created_at': 'ts', 'eventType': 'type'})
+    treatments_df = treatments_df[['ts', 'type', 'carbs', 'insulin']]
+
+    meal_mask = treatments_df.apply(lambda x: (x.type == 'Meal Bolus'), axis=1)
+    meals = treatments_df[meal_mask]
+
+    # remove carbs or insulin NaN
+    meals = meals.dropna()
+
+    # normalize timestamp to midnight so we can group by day
+    meals['ts_norm'] = treatments_df['ts'].dt.normalize()
+
+    # filter out days that don't have exactly 3 meals
+    meals = meals.groupby(['ts_norm']).filter(lambda x: len(x) == 3)
+
+    # find total carbs and insulin for day
+    meals = meals.groupby(['ts_norm']).sum()
+    print("Mean", meals.mean())
+
+    # plot daily carbs
+    daily_carbs = pd.Series(meals['carbs'])
+    daily_carbs.plot.line(title="Daily carbs")
+    plt.axhline(daily_carbs.mean(), color='b', linestyle='dashed', linewidth=2)
+    #plt.show()
+    plt.savefig("{}/daily_carbs.png".format(out_dir), format="png")
+    plt.close()
+
+    # plot daily basal insulin
+    daily_insulin = pd.Series(meals['insulin'])
+    daily_insulin.plot.line(title="Daily basal insulin")
+    plt.axhline(daily_insulin.mean(), color='b', linestyle='dashed', linewidth=2)
+    #plt.show()
+    plt.savefig("{}/daily_insulin.png".format(out_dir), format="png")
+    plt.close()
