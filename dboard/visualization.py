@@ -103,8 +103,15 @@ def daily_plot(points, bg_range, day, out_dir):
     return '<img src="{}/plot.png"/>'.format(day_dir)
 
 
+def read_existing_json_index(dir):
+    try:
+        index_json = open_file("{}/index.json".format(dir))
+        return json.load(index_json)
+    except FileNotFoundError:
+        return []
+
+
 def create_json_index(csv_file, out_dir, bg_range):
-    index_json = open_file("{}/index.json".format(out_dir), "w")
 
     entries_df = read_entries_df(csv_file)
     entries_ts = get_traces_ts(entries_df)
@@ -122,11 +129,13 @@ def create_json_index(csv_file, out_dir, bg_range):
 
     weekly_days = get_days_in_week(days)
 
-    all_data = []
+    existing_json = read_existing_json_index(out_dir)
+    all_data = {entry['week_start']: entry for entry in existing_json}
     for day, values in weekly_days.iteritems():
-        all_data.append(
-            {
-                "week_start": day.strftime("%d/%m/%Y"),
+        week_start = day.strftime("%d/%m/%Y")
+        # overwrite any newly computed week data
+        all_data[week_start] = {
+                "week_start": week_start,
                 "plots": [day.strftime("%Y/%m/%d/plot.png") for day in values],
                 "range_low": bg_range[0],
                 "range_high": bg_range[1],
@@ -134,9 +143,9 @@ def create_json_index(csv_file, out_dir, bg_range):
                 "average_bg": "%.1f" % weekly_avg[day],
                 "est_hba1c": "%.1f" % weekly_est_hba1c[day],
             }
-        )
 
-    print(json.dumps(all_data, indent=4), file=index_json)
+    index_json = open_file("{}/index.json".format(out_dir), "w")
+    print(json.dumps(list(all_data.values()), indent=4), file=index_json)
 
     for day in days:
         daily_plot(days_to_points[day], bg_range, day, out_dir)
